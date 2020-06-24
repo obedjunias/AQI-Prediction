@@ -2,12 +2,12 @@
 """
 Created on Tue Jun 23 15:56:25 2020
 
-@author: Taurus
+@author: Obed Junias
 """
 
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+
 
 def avg_data(years):
     
@@ -34,7 +34,6 @@ def avg_data(years):
         completeData[year] = average
     return completeData
             
-        
 if __name__ == "__main__":
     years = ["2013","2014","2015","2016","2017","2018"]
     data = avg_data(years)

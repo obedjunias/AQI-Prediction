@@ -2,7 +2,7 @@
 """
 Created on Mon Jun 22 16:50:17 2020
 
-@author: Taurus
+@author: Obed Junias
 """
 
 import os
