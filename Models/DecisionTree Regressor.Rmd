@@ -1,0 +1,206 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.5.0
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+```
+
+```{python}
+df = pd.read_csv("../Data/realData/CombinedData.csv")
+```
+
+```{python}
+sns.heatmap(df.isnull(),yticklabels=False,cbar=False,cmap="viridis")
+```
+
+```{python}
+df=df.dropna()
+```
+
+```{python}
+df.corr()
+```
+
+```{python}
+X = df.iloc[:,:-1]
+y = df.iloc[:,-1]
+```
+
+```{python}
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+```
+
+```{python}
+from sklearn.tree import DecisionTreeRegressor
+```
+
+```{python}
+tree = DecisionTreeRegressor(criterion="mse")
+```
+
+```{python}
+tree.fit(X_train,y_train)
+```
+
+```{python}
+print("Coefficient of determination R^2 on train set: {}".format(tree.score(X_train, y_train)))
+```
+
+```{python}
+print("Coefficient of determination R^2 <-- on test set: {}".format(tree.score(X_test, y_test)))
+```
+
+```{python}
+from sklearn.model_selection import cross_val_score
+score=cross_val_score(tree,X,y,cv=5)
+```
+
+```{python}
+score.mean()
+```
+
+```{python}
+from IPython.display import Image  
+from sklearn.externals.six import StringIO  
+from sklearn.tree import export_graphviz
+import pydotplus
+```
+
+```{python}
+import os
+
+os.environ['PATH'] = os.environ['PATH']+';'+os.environ['CONDA_PREFIX']+r"\Library\bin\graphviz"
+```
+
+```{python}
+# independant features
+features = list(df.columns[:-1])
+features
+```
+
+```{python}
+dot_data = StringIO()  
+export_graphviz(tree, out_file=dot_data,feature_names=features,filled=True,rounded=True)
+
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
+Image(graph.create_png())
+```
+
+```{python}
+prediction = tree.predict(X_test)
+```
+
+```{python}
+sns.distplot(prediction-y_test)
+```
+
+```{python}
+sns.scatterplot(prediction,y_test)
+```
+
+```{python}
+params={
+"splitter"  : ["best","random"] ,
+"max_depth" : [ 3, 4, 5, 6, 8, 10, 12, 15],
+"min_samples_leaf" : [ 1,2,3,4,5 ],
+"min_weight_fraction_leaf": [0.1,0.2,0.3,0.4],
+"max_features" : ["auto","log2","sqrt",None ],
+"max_leaf_nodes": [None,10,20,30,40,50,60,70]
+    
+}
+```
+
+```{python}
+from sklearn.model_selection import GridSearchCV
+```
+
+```{python}
+gs = GridSearchCV(tree,params,scoring="neg_mean_squared_error",n_jobs=-1,cv=10,verbose=3)
+```
+
+```{python}
+def timer(start_time=None):
+    if not start_time:
+        start_time = datetime.now()
+        return start_time
+    elif start_time:
+        thour, temp_sec = divmod((datetime.now() - start_time).total_seconds(), 3600)
+        tmin, tsec = divmod(temp_sec, 60)
+        print('\n Time taken: %i hours %i minutes and %s seconds.' % (thour, tmin, round(tsec, 2)))
+```
+
+```{python}
+from datetime import datetime
+
+start_time = timer() # timing starts from this point for "start_time" variable
+gs.fit(X,y)
+timer(start_time) # timing ends here for "start_time" variable
+```
+
+```{python}
+gs.best_params_
+```
+
+```{python}
+gs.best_score_
+```
+
+```{python}
+
+```
+
+```{python}
+pred = gs.predict(X_test)
+```
+
+```{python}
+sns.distplot(y_test-pred)
+```
+
+```{python}
+from sklearn import metrics
+```
+
+```{python}
+print('MAE:', metrics.mean_absolute_error(y_test, pred))
+print('MSE:', metrics.mean_squared_error(y_test, pred))
+print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, pred)))
+```
+
+```{python}
+print('MAE:', metrics.mean_absolute_error(y_test, prediction))
+print('MSE:', metrics.mean_squared_error(y_test, prediction))
+print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, prediction)))
+```
+
+```{python}
+import pickle
+# open a file, where you ant to store the data
+file = open('decision_regressor.pkl', 'wb')
+
+# dump information to that file
+pickle.dump(gs, file)
+```
+
+```{python}
+
+```
+
+```{python}
+
+```
